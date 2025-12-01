@@ -2,32 +2,34 @@ use std::io;
 
 fn main() {
     let lines = io::stdin().lines();
-    let mut position = 50;
-    let mut count = 0;
-    for line in lines {
-        let line = line.unwrap();
-        let direction = &line.chars().nth(0).unwrap();
-        let clicks: i32 = (&line[1..]).parse::<i32>().unwrap();
-        let rotation = match direction {
-            'L' => -clicks,
-            'R' => clicks,
-            _ => panic!()
-        };
-        let new_position = position + rotation;
-        
-        let n_crosses = (position.div_euclid(100) - new_position.div_euclid(100)).abs();
-        count += n_crosses;
-        
-        if (position == 0) && (rotation < 0) {
-            count -= 1;
-        }
+    let (_, count) = lines
+        .filter_map(|l| l.ok())
+        .map(|line| {
+            let direction = &line
+                .chars()
+                .nth(0)
+                .expect(&format!("Unknown line {}", line));
+            let clicks: i32 = (&line[1..])
+                .parse::<i32>()
+                .expect(&format!("Unknown line {}", line));
+            let rotation = match direction {
+                'L' => -clicks,
+                'R' => clicks,
+                _ => panic!("Unknown line {}", line),
+            };
+            rotation
+        })
+        .fold((50, 0), |(position, count), rotation| {
+            let new_position = position + rotation;
 
-        position = new_position.rem_euclid(100);
+            let n_crosses = if rotation > 0 {
+                new_position.div_euclid(100) - position.div_euclid(100)
+            } else {
+                (position - 1).div_euclid(100) - (new_position - 1).div_euclid(100)
+            };
+            
+            (new_position.rem_euclid(100), count + n_crosses)
+        });
 
-        if (position == 0) && (rotation < 0) {
-            count += 1;
-        }
-    }
-    
     println!("{}", count);
 }
