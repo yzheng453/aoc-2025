@@ -1,6 +1,18 @@
 {
     "configurations": [
         {
+            "name": "part1",
+            "type": "lldb",
+            "request": "launch",
+            "cargo": {
+                "args": [
+                    "run",
+                    "--bin=part1"
+                ]
+            },
+            "console": "externalTerminal"
+        },
+        {
             "name": "part2",
             "type": "lldb",
             "request": "launch",
