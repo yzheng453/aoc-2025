@@ -60,7 +60,7 @@ fn part2(input: (Vec<&[u8]>, Vec<Op>)) -> i64 {
     let (digits, ops) = input;
     let mut column = 0;
     ops.iter().map(|op| {
-        let mut c = ColumnNumberIterator(&digits, &mut column);
+        let c = ColumnNumberIterator(&digits, &mut column);
 
         let result = match op {
             Op::Plus => c.sum::<i64>(),
