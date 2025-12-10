@@ -1,6 +1,7 @@
 use std::{array, iter::Peekable, slice, vec};
 
 type Point = [i64; 2];
+type PointF = [f64; 2];
 
 fn parse_input(input_str: &String) -> Vec<Point> {
     input_str
@@ -22,6 +23,7 @@ fn part1(input: Vec<Point>) -> i64 {
 }
 
 type Edge<'a> = [&'a Point; 2];
+type EdgeF = [PointF; 2];
 
 struct EdgeIter<'a> {
     head: &'a Point,
@@ -64,27 +66,50 @@ fn crossing(a: &Edge, b: &Edge) -> bool {
     }
 }
 
+fn is_vertical_f(e: &EdgeF) -> bool {
+    (e[0][0] - e[1][0]).abs() < 0.0001
+}
+
+fn _crossing_f(vertical: &EdgeF, horizontal: &EdgeF) -> bool {
+    let y_axis = (vertical[0][1] - horizontal[0][1]) * (vertical[1][1] - horizontal[0][1]) < -0.001;
+    let x_axis = (horizontal[0][0] - vertical[0][0]) * (horizontal[1][0] - vertical[0][0]) < -0.001;
+    x_axis && y_axis
+}
+
+fn point_f_ify(p: &Point) -> PointF {
+    return [p[0] as f64, p[1] as f64]
+}
+
+fn edge_f_ify(e: &Edge) -> EdgeF {
+    return [point_f_ify(e[0]), point_f_ify(e[1])]
+}
+
+fn crossing_f(a: &EdgeF, b: &Edge) -> bool {
+    match (is_vertical_f(a), is_vertical(b)) {
+        (true, true) => false,
+        (false, false) => false,
+        (true, false) => _crossing_f(a, &edge_f_ify(b)),
+        (false, true) => _crossing_f(&edge_f_ify(b), a),
+    }
+}
+
 fn part2(input: Vec<Point>) -> i64 {
     input.iter().enumerate().flat_map(|(i, p)| {
         input.iter().skip(i + 1).flat_map(|q| {
-            // Check the validity of the rectangle.
-            let points: &[Edge] = &[
-                [&[p[0], q[1]], &[p[0], 0]], 
-                [&[q[0], p[1]], &[q[0], 0]], 
+            let top = p[0].min(q[0]) as f64 + 0.5;
+            let left = p[1].min(q[1]) as f64 + 0.5;
+            let bottom = p[0].max(q[0]) as f64 - 0.5;
+            let right = p[1].max(q[1]) as f64 - 0.5;
+
+            let corners: &[EdgeF] = &[
+                [[top, left], [top, 0.0]], 
+                [[top, right], [top, 0.0]], 
+                [[bottom, left], [bottom, 0.0]], 
+                [[bottom, right], [bottom, 0.0]], 
             ];
 
-            let outside = points.iter().any(|point| {
-                let crossing_count = new_edge_iter(&input).filter(|e| crossing(point, e)).count() % 2 == 0;
-                let on_boundary = new_edge_iter(&input).any(|e| {
-                    if e[0][0] == point[0][0] && e[1][0] == point[0][0] {
-                        return (e[0][1] - point[0][1]) * (e[1][1] - point[0][1]) <= 0;
-                    }
-                    if e[0][1] == point[0][1] && e[1][1] == point[0][1] {
-                        return (e[0][0] - point[0][0]) * (e[1][0] - point[0][0]) <= 0;
-                    }
-                    false
-                });
-                crossing_count && !on_boundary
+            let outside = corners.iter().any(|c| {
+                new_edge_iter(&input).filter(|e| crossing_f(c, e)).count() % 2 == 0
             });
             if outside {
                 return None;
