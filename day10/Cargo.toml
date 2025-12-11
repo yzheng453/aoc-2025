@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 regex = "1.x"
+z3 = "0.19.x"
 
 [dev-dependencies]
 test-case = "*"
